@@ -1,69 +1,91 @@
-#Gatherer
 
-## Intro
+# Gather
 
-When developing Node.js applications sometimes you need to know when a whole bunch of callbacks have finished. You *could* just use synchronous methods, but that defeats the point of using Node, doesn't it? 
+  Fire a callback when other async tasks are complete. CommonJS Component.
 
-Gatherer lets you set a callback to be run after a whole bunch of other callbacks have returned, but because that sounds incredibly boring it uses a metaphor of parties:
+## Installation
 
-Invite your guests to your gathering.
-Once all your guests have accepted their invites, start the party!
+    $ component install charlottegore/gather
 
-### The Code
+## API
 
-To install
+### require('gather').gathering()
 
-	npm install gatherer
-	cd node_modules/gatherer
-	npm install
+Create a new instance of gather. 
 
-In your javascript file.
+### gathering.task( callback )
 
-	var gathering = require('gatherer');
+Create a new task. When tasks are called, they are passed `done` and `error` as arguments. These are both functions. Call `done` when the task has completed successfully. Call `error` when the task has failed. You can pass details of the error to `error`.
 
-## Creating a party
+### gathering.run( callback [, timeout] )
 
-Create a new gathering..
+Run all the tasks, calling the callback when they're all complete. The callback receieves an array of errors passed to `error` by tasks.
 
-	var gathering = gatherer(); 
+Optionally you set a time limit with `timeout`.
 
-Create your invitations...
+### gathering.update( callback )
 
-	_.each(files, function( file ){
-		gathering.createInvitation( function( accept, decline ){
-			fs.readFile( file, 'utf8', function( err, data ){
-				if( !err ){
-					// do something with your file data..
-					accept();
-				} else {
-					decline();
-				}
-			});
-		});
-		
+You can, if you desire, set a callback to fire every time on of the task completes. This callback is passed the percentage complete from 0 to 100. This is intended to be used for progress bars, etc. 
+
+### gathering.reset()
+
+Reset the gathering so that it can be reused.
+
+## Example
+
+Create a new Gathering:
+```
+var gathering = require('gather').gathering;
+var sequence = gathering();
+```
+
+Add some tasks. Tasks tell Gather that they're done by calling either `done()` or `error()` 
+```
+sequence
+	.task(function(done, error){	
+		// task callbacks are passed two functions, 'done' and 'error'
+		doSomeAsyncThing(function(err){
+			if(!err){
+			    // this task has completed successfully. let's call 'done'
+				done();
+			}else{
+				error(err);
+			}
+		})
+	})
+	.task(function(done, error){	
+		doADifferentAsyncThing(function(err){
+			if(!err){
+				done();
+			}else{
+				// uh oh, this task has failed! Let's pass the error on.
+				error(err);
+			}
+		})
+	})
+	.task(function(done, error){	
+		alsoDoThisAsyncThing(function(err){
+			if(!err){
+				done();
+			}else{
+				error(err);
+			}
+		})
 	});
+```
 
-Send the invitations, executing a callback when they're done. Returns 'err' if there's an err, otherwise nothing.
+Run all the tasks, calling a callback when they're all finished, one way or another.
+```
+sequence.run(function(err){
+	// this callback is passed an array of all the errors generated.
+	if(!err){
+		// Hurray! No errors! All the tasks completed successfully!
+	} else {
+		// Oh no, a number of tasks failed. err will be an array of all the errors collected.
+	}
+})
+```
 
-	gathering.sendInvitations(function(err){
-		if(!err){
-			// all invites were accepted
-		} else {
-			// some invites were declined... err === number of declines
-		}
-	});
+## License
 
-You can also set a limit on how long you want to wait for the invites:
-
-	gathering.sendInvitations(function(){
-		if(err==='Error: Timed out'){
-			// it waited 2000 miliseconds then gave up			
-		}
-	}, { timeout : 2000 }) // will give up after 2000 ms. Warning: This doesn't cancel the execution of callbacks that are still running.
-
-
-### Run the tests
-
-You need mocha and should.js.
-
-	make test
+  MIT
