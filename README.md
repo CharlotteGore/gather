@@ -1,25 +1,62 @@
 
 # Gather
 
-  Fire a callback when other async tasks are complete. CommonJS Component.
+  Fire a callback when other async tasks are complete. For Browserify.
 
 ## Installation
 
-    $ component install charlottegore/gather
+    $ npm install gm-gather
 
 ## API
 
-### require('gather').gathering()
+### new Gather()
+
+```js
+var Gather = require('gm-gather');
+var gathering = new Gather();
+```
 
 Create a new instance of gather. 
 
 ### gathering.task( callback )
 
+```js
+
+// create a task for the gathering to run. call 
+// done if the task completes successfully, call
+// error if the task fails.
+
+gathering.task(function (done, error){
+	
+	ajax.load(uri, function(err, data){
+
+		if (!err){
+			processData(data);
+			done();
+		} else {
+			error();
+		}
+
+	})
+
+});
+```
+
 Create a new task. When tasks are called, they are passed `done` and `error` as arguments. These are both functions. Call `done` when the task has completed successfully. Call `error` when the task has failed. You can pass details of the error to `error`.
 
 ### gathering.run( callback [, timeout] )
 
-Run all the tasks, calling the callback when they're all complete. The callback receieves an array of errors passed to `error` by tasks.
+```js
+gathering.run(function (err){
+	
+	if (!err){
+		// Yay, all my tasks were successful..
+	}
+
+}, 3000);
+```
+
+Run all the tasks asychronously, calling this callback when they're all complete. The callback receieves an array of errors passed to `error` by tasks.
 
 Optionally you set a time limit with `timeout`.
 
@@ -35,8 +72,7 @@ Reset the gathering so that it can be reused.
 
 Create a new Gathering:
 ```
-var gathering = require('gather').gathering;
-var sequence = gathering();
+var sequence = new Gather;
 ```
 
 Add some tasks. Tasks tell Gather that they're done by calling either `done()` or `error()` 

@@ -4,14 +4,14 @@ var READY = -1,
 	Gatherer,
 	checkTasks;
 
-Gatherer = function Gatherer(){
+function Gatherer(){
 
 	this.reset();
 	return this;
 
 }
 
-checkTasks = function(){
+function checkTasks(){
 
 	var completed = this.tasksComplete + this.tasksFailed;
 	var count = this.tasks.length;
@@ -33,7 +33,7 @@ checkTasks = function(){
 
 Gatherer.prototype = {
 
-	reset : function(){
+	reset : function resetGathering(){
 
 		var self = this;
 
@@ -51,7 +51,7 @@ Gatherer.prototype = {
 
 	},
 
-	task : function( callback ){
+	task : function createTask( callback ){
 
 		var self = this,
 			task = { status : READY },
@@ -77,15 +77,15 @@ Gatherer.prototype = {
 
 	},
 
-	run : function( callback, timeout ){
+	run : function runTasks( callback, timeout ){
 
 		var self = this;
 
-		if(timeout){
+		if (timeout){
 
 			setTimeout(function(){
 
-				if(!self.isComplete){
+				if (!self.isComplete){
 
 					self.fn.complete('Error: Timed out');
 					self.fn.complete = function(){};
@@ -100,7 +100,7 @@ Gatherer.prototype = {
 		self.fn.complete = callback;
 
 		// run the task callbacks...
-		for(var i = 0, il = self.tasks.length; i < il; i++){
+		for (var i = 0, il = self.tasks.length; i < il; i++){
 			self.tasks[i].fn();
 		}
 
@@ -108,15 +108,11 @@ Gatherer.prototype = {
 
 	},
 
-	update : function( callback ){
+	update : function setUpdateCallback( callback ){
 		this.fn.update = callback;
 		return this;
 	}
 
 }
 
-module.exports.gathering = function(){
-
-	return new Gatherer();
-
-}
+module.exports = Gatherer;

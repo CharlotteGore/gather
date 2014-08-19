@@ -1,11 +1,4 @@
 
-
-/**
- * hasOwnProperty.
- */
-
-var has = Object.prototype.hasOwnProperty;
-
 /**
  * Require the given path.
  *
@@ -33,10 +26,14 @@ function require(path, parent, orig) {
   // perform real require()
   // by invoking the module's
   // registered function
-  if (!module.exports) {
-    module.exports = {};
-    module.client = module.component = true;
-    module.call(this, module.exports, require.relative(resolved), module);
+  if (!module._resolving && !module.exports) {
+    var mod = {};
+    mod.exports = {};
+    mod.client = mod.component = true;
+    module._resolving = true;
+    module.call(this, mod.exports, require.relative(resolved), mod);
+    delete module._resolving;
+    module.exports = mod.exports;
   }
 
   return module.exports;
@@ -69,7 +66,7 @@ require.aliases = {};
  */
 
 require.resolve = function(path) {
-  var index = path + '/index.js';
+  if (path.charAt(0) === '/') path = path.slice(1);
 
   var paths = [
     path,
@@ -81,11 +78,8 @@ require.resolve = function(path) {
 
   for (var i = 0; i < paths.length; i++) {
     var path = paths[i];
-    if (has.call(require.modules, path)) return path;
-  }
-
-  if (has.call(require.aliases, index)) {
-    return require.aliases[index];
+    if (require.modules.hasOwnProperty(path)) return path;
+    if (require.aliases.hasOwnProperty(path)) return require.aliases[path];
   }
 };
 
@@ -138,7 +132,7 @@ require.register = function(path, definition) {
  */
 
 require.alias = function(from, to) {
-  if (!has.call(require.modules, from)) {
+  if (!require.modules.hasOwnProperty(from)) {
     throw new Error('Failed to alias "' + from + '", it does not exist');
   }
   require.aliases[to] = from;
@@ -181,17 +175,18 @@ require.relative = function(parent) {
    */
 
   localRequire.resolve = function(path) {
+    var c = path.charAt(0);
+    if ('/' == c) return path.slice(1);
+    if ('.' == c) return require.normalize(p, path);
+
     // resolve deps by returning
     // the dep in the nearest "deps"
     // directory
-    if ('.' != path.charAt(0)) {
-      var segs = parent.split('/');
-      var i = lastIndexOf(segs, 'deps') + 1;
-      if (!i) i = 0;
-      path = segs.slice(0, i + 1).join('/') + '/deps/' + path;
-      return path;
-    }
-    return require.normalize(p, path);
+    var segs = parent.split('/');
+    var i = lastIndexOf(segs, 'deps') + 1;
+    if (!i) i = 0;
+    path = segs.slice(0, i + 1).join('/') + '/deps/' + path;
+    return path;
   };
 
   /**
@@ -199,7 +194,7 @@ require.relative = function(parent) {
    */
 
   localRequire.exists = function(path) {
-    return has.call(require.modules, localRequire.resolve(path));
+    return require.modules.hasOwnProperty(localRequire.resolve(path));
   };
 
   return localRequire;
@@ -211,14 +206,14 @@ var READY = -1,
 	Gatherer,
 	checkTasks;
 
-Gatherer = function Gatherer(){
+function Gatherer(){
 
 	this.reset();
 	return this;
 
 }
 
-checkTasks = function(){
+function checkTasks(){
 
 	var completed = this.tasksComplete + this.tasksFailed;
 	var count = this.tasks.length;
@@ -240,7 +235,7 @@ checkTasks = function(){
 
 Gatherer.prototype = {
 
-	reset : function(){
+	reset : function resetGathering(){
 
 		var self = this;
 
@@ -258,7 +253,7 @@ Gatherer.prototype = {
 
 	},
 
-	task : function( callback ){
+	task : function createTask( callback ){
 
 		var self = this,
 			task = { status : READY },
@@ -284,15 +279,15 @@ Gatherer.prototype = {
 
 	},
 
-	run : function( callback, timeout ){
+	run : function runTasks( callback, timeout ){
 
 		var self = this;
 
-		if(timeout){
+		if (timeout){
 
 			setTimeout(function(){
 
-				if(!self.isComplete){
+				if (!self.isComplete){
 
 					self.fn.complete('Error: Timed out');
 					self.fn.complete = function(){};
@@ -307,7 +302,7 @@ Gatherer.prototype = {
 		self.fn.complete = callback;
 
 		// run the task callbacks...
-		for(var i = 0, il = self.tasks.length; i < il; i++){
+		for (var i = 0, il = self.tasks.length; i < il; i++){
 			self.tasks[i].fn();
 		}
 
@@ -315,17 +310,12 @@ Gatherer.prototype = {
 
 	},
 
-	update : function( callback ){
+	update : function setUpdateCallback( callback ){
 		this.fn.update = callback;
 		return this;
 	}
 
 }
 
-module.exports.gathering = function(){
-
-	return new Gatherer();
-
-}
+module.exports = Gatherer;
 });
-

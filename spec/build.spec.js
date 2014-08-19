@@ -1,10 +1,12 @@
 describe("Gather", function(){
 
+	var Gatherer = require('gather');
+
 	describe("Build success/Framework", function(){
 
 		it("Can load the module",function(){
 
-			expect(require('gather')).toBeTruthy();
+			expect(Gatherer).toBeTruthy();
 
 		})
 
@@ -15,7 +17,7 @@ describe("Gather", function(){
 
 		it("can return a gathering object", function(){
 
-			var gathering = require('gather').gathering();
+			var gathering = new Gatherer();
 
 			expect(gathering.task).toBeDefined();
 			expect(gathering.run).toBeDefined();
@@ -26,7 +28,7 @@ describe("Gather", function(){
 
 		it("Can add tasks", function(){
 
-			var gathering = require('gather').gathering();
+			var gathering = new Gatherer();
 			var fn = function(done, error){ done(); }
 
 			expect(gathering.tasks.length).toBe(0);
@@ -44,7 +46,7 @@ describe("Gather", function(){
 
 		it("can run sync tasks", function(){
 
-			var gathering = require('gather').gathering();			
+			var gathering = new Gatherer();			
 			var complete = false;
 			var count = 0;
 
@@ -73,7 +75,7 @@ describe("Gather", function(){
 
 		it("can run async tasks", function(){
 
-			var gathering = require('gather').gathering();
+			var gathering = new Gatherer();
 			var complete = false;
 			var count = 0;
 
@@ -132,7 +134,7 @@ describe("Gather", function(){
 
 		it("correctly logs errors", function(){
 
-			var gathering = require('gather').gathering();
+			var gathering = new Gatherer();
 			var complete = false;
 			var count = 0;
 			var errors = [];
@@ -195,7 +197,7 @@ describe("Gather", function(){
 
 		it("updates correctly", function(){
 
-			var gathering = require('gather').gathering();
+			var gathering = new Gatherer();
 			var complete = false;
 			var count = 0;
 			var spy = jasmine.createSpy();

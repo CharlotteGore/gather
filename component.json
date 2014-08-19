@@ -2,7 +2,7 @@
   "name": "gather",
   "repo": "charlottegore/gather",
   "description": "Fire a callback when other async tasks are complete.",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "keywords": [],
   "dependencies": {},
   "development": {},
